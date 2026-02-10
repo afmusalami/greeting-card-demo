@@ -3,176 +3,269 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Greeting Card – Demo</title>
+  <title>Greeting Card</title>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; background:#fff; }
-    .wrap { max-width: 1100px; margin: 0 auto; }
-    h1 { margin: 0 0 6px; }
-    p { margin: 0 0 16px; color:#444; }
-
-    /* Horizontal layout on desktop */
-    .layout { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
-
-    .cardBox {
-      position: relative;
-      width: 760px;
-      max-width: 100%;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid #ddd;
-      background:#f7f7f7;
+    /* Full-bleed: no UI outside design */
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      font-family: Arial, sans-serif;
     }
-    .cardBox img { display:block; width:100%; height:auto; }
 
-    /* Input overlay INSIDE the design (desktop default: wide card) */
-    .overlayWrap {
-      position:absolute;
-      left: 7%;
-      top: 52%;
-      width: 50%;
-      display:flex;
+    /* Center the design area on desktop; on phone it will fill width */
+    .stage {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    /* Card container uses background image as the whole page */
+    .card {
+      position: relative;
+      width: min(100vw, 1200px);
+      aspect-ratio: 16 / 9;          /* desktop wide */
+      border-radius: 16px;
+      overflow: hidden;
+      background: #111;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+    }
+
+    /* PHONE: long portrait */
+    @media (max-width: 767px) {
+      .card {
+        width: 100vw;
+        height: 100vh;
+        aspect-ratio: auto;
+        border-radius: 0;
+      }
+    }
+
+    /* ---- Overlay controls INSIDE design ---- */
+    .overlay {
+      position: absolute;
+      display: flex;
       flex-direction: column;
       gap: 10px;
+      align-items: flex-start;
     }
 
-    .nameInput, .arInput {
-      width: 100%;
-      padding: 10px 12px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,0.65);
-      outline: none;
-      background: rgba(0,0,0,0.22);
-      color: #fff;
-      backdrop-filter: blur(2px);
+    /* Desktop placement (matches your wide reference: left block, not reaching moon) */
+    .overlay.desktop {
+      left: 12%;
+      top: 42%;
+      width: 36%;         /* IMPORTANT: stops before moon */
     }
-    .nameInput::placeholder, .arInput::placeholder { color: rgba(255,255,255,0.85); }
-    .arInput { direction: rtl; display:none; }
 
-    /* Controls */
-    .controls { flex:1; min-width: 280px; }
-    .choiceRow { display:flex; gap:10px; flex-wrap:wrap; margin: 10px 0 14px; }
-
-    button{
-      font-size: 16px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid #cfcfcf;
-      background: #f6f6f6;
-      cursor: pointer;
-    }
-    button.primary { background:#0b2a4a; color:#fff; border-color:#0b2a4a; }
-    .note { color:#555; font-size:14px; margin-top:10px; line-height:1.4; }
-
-    /* PHONE: show portrait card and move input to bottom center */
+    /* Phone placement (centered under greeting) */
     @media (max-width: 767px) {
-      body { margin: 16px; }
-      .layout { flex-direction: column; }
-      .cardBox { width: 100%; }
-
-      .overlayWrap {
+      .overlay.desktop { display: none; }
+      .overlay.phone {
         left: 10%;
-        top: 79%;
+        top: 66%;
         width: 80%;
         align-items: center;
       }
-
-      .nameInput, .arInput {
-        background: rgba(255,255,255,0.75);
-        color: #222;
-        border: 1px solid rgba(0,0,0,0.15);
-      }
-      .nameInput::placeholder, .arInput::placeholder { color: rgba(0,0,0,0.45); }
     }
+
+    @media (min-width: 768px) {
+      .overlay.phone { display: none; }
+    }
+
+    /* Input styled like “inside design” */
+    .nameRow {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      outline: none;
+      background: rgba(0,0,0,0.25);
+      color: #fff;
+      backdrop-filter: blur(2px);
+    }
+    input::placeholder { color: rgba(255,255,255,0.75); }
+
+    /* Buttons inside design */
+    .btnRow {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 9px 12px;
+      font-size: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(0,0,0,0.20);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(2px);
+    }
+
+    button.active {
+      background: rgba(255,255,255,0.85);
+      color: #0b2a4a;
+      border-color: rgba(255,255,255,0.85);
+      font-weight: 700;
+    }
+
+    /* Generate appears only after language selected */
+    .genBtn {
+      width: fit-content;
+      display: none;
+      background: rgba(255,255,255,0.90);
+      color: #0b2a4a;
+      border-color: rgba(255,255,255,0.90);
+      font-weight: 700;
+    }
+
+    /* Small helper to prevent selecting UI text */
+    .noselect { user-select: none; }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <h1>Greeting Card Microsite (Demo)</h1>
-    <p>Type your name and choose a language. You’ll be taken to the generated card.</p>
+  <div class="stage">
+    <div class="card" id="cardBg">
 
-    <div class="layout">
-      <div class="cardBox">
-        <!-- Desktop uses landscape background; phone uses portrait background -->
-        <picture>
-          <source media="(max-width: 767px)" srcset="demo-card-portrait.png">
-          <img src="demo-card-landscape.png" alt="Greeting Card" />
-        </picture>
-
-        <!-- Input inside design -->
-        <div class="overlayWrap">
-          <input id="nameField" class="nameInput" maxlength="40" placeholder="Write your name here..." />
-          <input id="arabicField" class="arInput" maxlength="40" placeholder="اكتب اسمك هنا..." />
+      <!-- Desktop overlay -->
+      <div class="overlay desktop">
+        <div class="nameRow">
+          <input id="nameInput" type="text" maxlength="40" placeholder="Write your name here..." />
         </div>
-      </div>
 
-      <div class="controls">
-        <h3 style="margin:0 0 8px;">Choose Language</h3>
-
-        <div class="choiceRow">
-          <button id="btnEn" class="primary" type="button">English</button>
+        <div class="btnRow noselect">
+          <button id="btnEn" type="button">English</button>
           <button id="btnAr" type="button">Arabic</button>
           <button id="btnBi" type="button">Bilingual</button>
         </div>
 
-        <button id="goBtn" class="primary" disabled type="button">Generate →</button>
-
-        <div class="note">
-          • English: generates English card text + your name.<br/>
-          • Arabic: generates Arabic card text + your name (RTL).<br/>
-          • Bilingual: requires both English + Arabic names.
-        </div>
+        <button id="generateBtnDesktop" class="genBtn" type="button">Generate</button>
       </div>
+
+      <!-- Phone overlay -->
+      <div class="overlay phone">
+        <div class="nameRow">
+          <input id="nameInputPhone" type="text" maxlength="40" placeholder="Write your name here..." />
+        </div>
+
+        <div class="btnRow noselect" style="justify-content:center;">
+          <button id="btnEnP" type="button">English</button>
+          <button id="btnArP" type="button">Arabic</button>
+          <button id="btnBiP" type="button">Bilingual</button>
+        </div>
+
+        <button id="generateBtnPhone" class="genBtn" type="button">Generate</button>
+      </div>
+
     </div>
   </div>
 
   <script>
+    // --- Device rule: phone = portrait, desktop = landscape
+    const isPhone = window.matchMedia("(max-width: 767px)").matches;
+
+    // Backgrounds by language + orientation (you will upload 6 files)
+    function bgFile(mode) {
+      const ori = isPhone ? "portrait" : "landscape";
+      if (mode === "en") return `bg-en-${ori}.png`;
+      if (mode === "ar") return `bg-ar-${ori}.png`;
+      return `bg-bi-${ori}.png`; // bi
+    }
+
+    const cardBg = document.getElementById("cardBg");
+
+    // Inputs (one field, but we have 2 elements for desktop/phone)
+    const nameDesktop = document.getElementById("nameInput");
+    const namePhone   = document.getElementById("nameInputPhone");
+
+    // Buttons desktop
     const btnEn = document.getElementById("btnEn");
     const btnAr = document.getElementById("btnAr");
     const btnBi = document.getElementById("btnBi");
-    const goBtn = document.getElementById("goBtn");
+    const genD  = document.getElementById("generateBtnDesktop");
 
-    const nameField = document.getElementById("nameField");
-    const arabicField = document.getElementById("arabicField");
+    // Buttons phone
+    const btnEnP = document.getElementById("btnEnP");
+    const btnArP = document.getElementById("btnArP");
+    const btnBiP = document.getElementById("btnBiP");
+    const genP   = document.getElementById("generateBtnPhone");
 
-    let mode = "en"; // en | ar | bi
+    let mode = null; // "en" | "ar" | "bi"
 
-    function setMode(m){
-      mode = m;
-      btnEn.classList.toggle("primary", mode === "en");
-      btnAr.classList.toggle("primary", mode === "ar");
-      btnBi.classList.toggle("primary", mode === "bi");
+    function setActive(which) {
+      mode = which;
 
-      arabicField.style.display = (mode === "bi") ? "block" : "none";
-      validate();
+      // set background immediately based on selection
+      cardBg.style.backgroundImage = `url('${bgFile(mode)}')`;
+
+      // active styling
+      [btnEn, btnAr, btnBi].forEach(b => b.classList.remove("active"));
+      [btnEnP, btnArP, btnBiP].forEach(b => b.classList.remove("active"));
+
+      if (mode === "en") { btnEn.classList.add("active"); btnEnP.classList.add("active"); }
+      if (mode === "ar") { btnAr.classList.add("active"); btnArP.classList.add("active"); }
+      if (mode === "bi") { btnBi.classList.add("active"); btnBiP.classList.add("active"); }
+
+      // Show Generate only after selection
+      genD.style.display = "inline-block";
+      genP.style.display = "inline-block";
+
+      // Placeholder can stay English, or you can switch:
+      // (optional) change placeholder based on mode:
+      const ph = (mode === "ar") ? "اكتب اسمك هنا..." : "Write your name here...";
+      nameDesktop.placeholder = ph;
+      namePhone.placeholder = ph;
     }
 
-    function validate(){
-      const enOk = nameField.value.trim().length > 0;
-      const arOk = arabicField.value.trim().length > 0;
+    // Set initial background (optional: show English by default, but Generate must stay hidden)
+    // If you want NO default selection, comment next line:
+    cardBg.style.backgroundImage = `url('${bgFile("en")}')`;
 
-      if (mode === "bi") goBtn.disabled = !(enOk && arOk);
-      else goBtn.disabled = !enOk;
+    // Click handlers
+    btnEn.onclick = () => setActive("en");
+    btnAr.onclick = () => setActive("ar");
+    btnBi.onclick = () => setActive("bi");
+    btnEnP.onclick = () => setActive("en");
+    btnArP.onclick = () => setActive("ar");
+    btnBiP.onclick = () => setActive("bi");
+
+    function getName() {
+      const v = (isPhone ? namePhone.value : nameDesktop.value).trim();
+      return v;
     }
 
-    btnEn.addEventListener("click", ()=> setMode("en"));
-    btnAr.addEventListener("click", ()=> setMode("ar"));
-    btnBi.addEventListener("click", ()=> setMode("bi"));
+    function goGenerate() {
+      if (!mode) return; // generate should be hidden anyway
+      const name = getName();
+      if (!name) return;
 
-    nameField.addEventListener("input", validate);
-    arabicField.addEventListener("input", validate);
+      const m = encodeURIComponent(mode);
+      const n = encodeURIComponent(name);
+      window.location.href = `card.html?mode=${m}&name=${n}`;
+    }
 
-    goBtn.addEventListener("click", ()=>{
-      const en = encodeURIComponent(nameField.value.trim());
-      const ar = encodeURIComponent(arabicField.value.trim());
-      const m  = encodeURIComponent(mode);
-      window.location.href = `card.html?mode=${m}&en=${en}&ar=${ar}`;
-    });
+    genD.onclick = goGenerate;
+    genP.onclick = goGenerate;
 
-    setMode("en");
+    // Enter key to generate (optional)
+    nameDesktop.addEventListener("keydown", (e) => { if (e.key === "Enter") goGenerate(); });
+    namePhone.addEventListener("keydown", (e) => { if (e.key === "Enter") goGenerate(); });
   </script>
 </body>
 </html>
-
-
-
