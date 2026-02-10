@@ -3,158 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Greeting Card Generator (Demo)</title>
-
+  <title>Greeting Card – Demo</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 24px;
-      line-height: 1.4;
-      background: #ffffff;
+    body { font-family: Arial, sans-serif; margin: 24px; background:#fff; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; }
+    p { margin: 0 0 16px; color:#444; }
+
+    /* Horizontal layout on desktop */
+    .layout { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+
+    .cardBox {
+      position: relative;
+      width: 760px;
+      max-width: 100%;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      background:#f7f7f7;
+    }
+    .cardBox img { display:block; width:100%; height:auto; }
+
+    /* Input overlay INSIDE the design (desktop default: wide card) */
+    .overlayWrap {
+      position:absolute;
+      left: 7%;
+      top: 52%;
+      width: 50%;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .wrap {
-      max-width: 760px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      margin-bottom: 6px;
-    }
-
-    input, button {
-      font-size: 16px;
-      padding: 10px 12px;
-    }
-
-    input {
+    .nameInput, .arInput {
       width: 100%;
-      max-width: 420px;
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.65);
+      outline: none;
+      background: rgba(0,0,0,0.22);
+      color: #fff;
+      backdrop-filter: blur(2px);
     }
+    .nameInput::placeholder, .arInput::placeholder { color: rgba(255,255,255,0.85); }
+    .arInput { direction: rtl; display:none; }
 
-    button {
+    /* Controls */
+    .controls { flex:1; min-width: 280px; }
+    .choiceRow { display:flex; gap:10px; flex-wrap:wrap; margin: 10px 0 14px; }
+
+    button{
+      font-size: 16px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfcfcf;
+      background: #f6f6f6;
       cursor: pointer;
     }
+    button.primary { background:#0b2a4a; color:#fff; border-color:#0b2a4a; }
+    .note { color:#555; font-size:14px; margin-top:10px; line-height:1.4; }
 
-    canvas {
-      width: 100%;
-      max-width: 760px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      margin-top: 16px;
-    }
+    /* PHONE: show portrait card and move input to bottom center */
+    @media (max-width: 767px) {
+      body { margin: 16px; }
+      .layout { flex-direction: column; }
+      .cardBox { width: 100%; }
 
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-top: 10px;
-    }
+      .overlayWrap {
+        left: 10%;
+        top: 79%;
+        width: 80%;
+        align-items: center;
+      }
 
-    .hint {
-      color: #555;
-      font-size: 14px;
-      margin-top: 6px;
+      .nameInput, .arInput {
+        background: rgba(255,255,255,0.75);
+        color: #222;
+        border: 1px solid rgba(0,0,0,0.15);
+      }
+      .nameInput::placeholder, .arInput::placeholder { color: rgba(0,0,0,0.45); }
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <h1>Greeting Card Generator (Demo)</h1>
-    <p>Enter your name, preview the card, then download it.</p>
+    <h1>Greeting Card Microsite (Demo)</h1>
+    <p>Type your name and choose a language. You’ll be taken to the generated card.</p>
 
-    <label for="nameInput"><strong>Your name</strong></label><br />
+    <div class="layout">
+      <div class="cardBox">
+        <!-- Desktop uses landscape background; phone uses portrait background -->
+        <picture>
+          <source media="(max-width: 767px)" srcset="demo-card-portrait.png">
+          <img src="demo-card-landscape.png" alt="Greeting Card" />
+        </picture>
 
-    <div class="row">
-      <input
-        id="nameInput"
-        type="text"
-        placeholder="e.g., Ahmed"
-        maxlength="40"
-      />
-      <button id="generateBtn">Generate</button>
-      <button id="downloadBtn" disabled>Download PNG</button>
+        <!-- Input inside design -->
+        <div class="overlayWrap">
+          <input id="nameField" class="nameInput" maxlength="40" placeholder="Write your name here..." />
+          <input id="arabicField" class="arInput" maxlength="40" placeholder="اكتب اسمك هنا..." />
+        </div>
+      </div>
+
+      <div class="controls">
+        <h3 style="margin:0 0 8px;">Choose Language</h3>
+
+        <div class="choiceRow">
+          <button id="btnEn" class="primary" type="button">English</button>
+          <button id="btnAr" type="button">Arabic</button>
+          <button id="btnBi" type="button">Bilingual</button>
+        </div>
+
+        <button id="goBtn" class="primary" disabled type="button">Generate →</button>
+
+        <div class="note">
+          • English: generates English card text + your name.<br/>
+          • Arabic: generates Arabic card text + your name (RTL).<br/>
+          • Bilingual: requires both English + Arabic names.
+        </div>
+      </div>
     </div>
-
-    <div class="hint">
-      On iPhone, the image may open in a new tab — long-press → Save Image.
-    </div>
-
-    <canvas id="cardCanvas" width="1080" height="1080"></canvas>
   </div>
 
   <script>
-    const canvas = document.getElementById("cardCanvas");
-    const ctx = canvas.getContext("2d");
+    const btnEn = document.getElementById("btnEn");
+    const btnAr = document.getElementById("btnAr");
+    const btnBi = document.getElementById("btnBi");
+    const goBtn = document.getElementById("goBtn");
 
-    const nameInput = document.getElementById("nameInput");
-    const generateBtn = document.getElementById("generateBtn");
-    const downloadBtn = document.getElementById("downloadBtn");
+    const nameField = document.getElementById("nameField");
+    const arabicField = document.getElementById("arabicField");
 
-    const bg = new Image();
-    bg.src = "demo-card.png"; // MUST match your uploaded image name
+    let mode = "en"; // en | ar | bi
 
-    function drawCard(name) {
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function setMode(m){
+      mode = m;
+      btnEn.classList.toggle("primary", mode === "en");
+      btnAr.classList.toggle("primary", mode === "ar");
+      btnBi.classList.toggle("primary", mode === "bi");
 
-      // Draw background
-      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
-      const safeName = (name || "").trim() || "Your Name";
-
-      // 🔧 POSITION — adjust if needed
-      // 🔧 POSITION (lower-left area)
-      const x = 160;   // increase to move right
-      const y = 820;   // increase to move down
-
-      ctx.textAlign = "left";
-
-
-      // Auto-fit font size for long names
-      let fontSize = 120;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      while (fontSize > 50) {
-        ctx.font = `700 ${fontSize}px Arial`;
-        if (ctx.measureText(safeName).width <= canvas.width * 0.8) break;
-        fontSize -= 2;
-      }
-
-      // White text
-      ctx.fillStyle = "#FFFFFF";
-
-      // Subtle outline for readability
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.strokeText(safeName, x, y);
-
-      ctx.fillText(safeName, x, y);
-
-      downloadBtn.disabled = false;
+      arabicField.style.display = (mode === "bi") ? "block" : "none";
+      validate();
     }
 
-    generateBtn.addEventListener("click", () => {
-      drawCard(nameInput.value);
+    function validate(){
+      const enOk = nameField.value.trim().length > 0;
+      const arOk = arabicField.value.trim().length > 0;
+
+      if (mode === "bi") goBtn.disabled = !(enOk && arOk);
+      else goBtn.disabled = !enOk;
+    }
+
+    btnEn.addEventListener("click", ()=> setMode("en"));
+    btnAr.addEventListener("click", ()=> setMode("ar"));
+    btnBi.addEventListener("click", ()=> setMode("bi"));
+
+    nameField.addEventListener("input", validate);
+    arabicField.addEventListener("input", validate);
+
+    goBtn.addEventListener("click", ()=>{
+      const en = encodeURIComponent(nameField.value.trim());
+      const ar = encodeURIComponent(arabicField.value.trim());
+      const m  = encodeURIComponent(mode);
+      window.location.href = `card.html?mode=${m}&en=${en}&ar=${ar}`;
     });
 
-    nameInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") drawCard(nameInput.value);
-    });
-
-    downloadBtn.addEventListener("click", () => {
-      const link = document.createElement("a");
-      link.download = "greeting-card.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
-
-    bg.onload = () => drawCard("");
+    setMode("en");
   </script>
 </body>
 </html>
+
 
 
