@@ -4,29 +4,83 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Greeting Card Generator (Demo)</title>
+
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
-    .wrap { max-width: 760px; margin: 0 auto; }
-    input, button { font-size: 16px; padding: 10px 12px; }
-    input { width: 100%; max-width: 420px; }
-    button { cursor: pointer; }
-    canvas { width: 100%; max-width: 760px; border: 1px solid #ddd; border-radius: 12px; margin-top: 16px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
-    .hint { color: #555; font-size: 14px; margin-top: 6px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      line-height: 1.4;
+      background: #ffffff;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 6px;
+    }
+
+    input, button {
+      font-size: 16px;
+      padding: 10px 12px;
+    }
+
+    input {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 760px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .hint {
+      color: #555;
+      font-size: 14px;
+      margin-top: 6px;
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>Greeting Card Generator (Demo)</h1>
     <p>Enter your name, preview the card, then download it.</p>
 
     <label for="nameInput"><strong>Your name</strong></label><br />
+
     <div class="row">
-      <input id="nameInput" type="text" placeholder="e.g., Ahmed" maxlength="40" />
+      <input
+        id="nameInput"
+        type="text"
+        placeholder="e.g., Ahmed"
+        maxlength="40"
+      />
       <button id="generateBtn">Generate</button>
       <button id="downloadBtn" disabled>Download PNG</button>
     </div>
-    <div class="hint">On iPhone, the image may open in a new tab—then long-press → Save Image.</div>
+
+    <div class="hint">
+      On iPhone, the image may open in a new tab — long-press → Save Image.
+    </div>
 
     <canvas id="cardCanvas" width="1080" height="1080"></canvas>
   </div>
@@ -34,55 +88,55 @@
   <script>
     const canvas = document.getElementById("cardCanvas");
     const ctx = canvas.getContext("2d");
+
     const nameInput = document.getElementById("nameInput");
     const generateBtn = document.getElementById("generateBtn");
     const downloadBtn = document.getElementById("downloadBtn");
 
     const bg = new Image();
-    bg.src = "demo-card.png"; // must match your uploaded image filename exactly
+    bg.src = "demo-card.png"; // MUST match your uploaded image name
 
     function drawCard(name) {
+      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background
       ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
       const safeName = (name || "").trim() || "Your Name";
 
-      // ✅ CHANGE THESE TWO VALUES to move the name position
-      const x = canvas.width / 2;  // center
-      const y = 650;               // vertical position (increase = lower)
+      // 🔧 POSITION — adjust if needed
+      const x = canvas.width / 2;
+      const y = 560; // vertical position (smaller = higher)
 
       // Auto-fit font size for long names
-      let fontSize = 88;
+      let fontSize = 120;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      while (fontSize > 40) {
+      while (fontSize > 50) {
         ctx.font = `700 ${fontSize}px Arial`;
-        if (ctx.measureText(safeName).width <= canvas.width * 0.80) break;
+        if (ctx.measureText(safeName).width <= canvas.width * 0.8) break;
         fontSize -= 2;
       }
 
-      // ✅ CHANGE THIS COLOR to match your design
-      ctx.fillStyle = "#0B2A4A";
+      // White text
+      ctx.fillStyle = "#FFFFFF";
 
-      // Optional shadow for readability
-      ctx.shadowColor = "rgba(0,0,0,0.18)";
-      ctx.shadowBlur = 8;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 3;
+      // Subtle outline for readability
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+      ctx.strokeText(safeName, x, y);
 
       ctx.fillText(safeName, x, y);
-
-      // Reset shadow
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
 
       downloadBtn.disabled = false;
     }
 
-    generateBtn.addEventListener("click", () => drawCard(nameInput.value));
+    generateBtn.addEventListener("click", () => {
+      drawCard(nameInput.value);
+    });
+
     nameInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") drawCard(nameInput.value);
     });
@@ -98,3 +152,4 @@
   </script>
 </body>
 </html>
+
