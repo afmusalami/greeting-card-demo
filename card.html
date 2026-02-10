@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Generated Greeting Card</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background:#fff; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .top { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    button{
+      font-size:16px; padding:10px 14px;
+      border-radius:12px; border:1px solid #cfcfcf; background:#f6f6f6; cursor:pointer;
+    }
+    button.primary { background:#0b2a4a; color:#fff; border-color:#0b2a4a; }
+    canvas { width:100%; border:1px solid #ddd; border-radius:12px; margin-top:14px; }
+    .hint { color:#555; font-size:14px; margin-top:8px; line-height:1.4; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h2 style="margin:0;">Your Greeting Card</h2>
+      <button id="backBtn" type="button">← Back</button>
+      <button id="downloadBtn" class="primary" type="button" disabled>Download PNG</button>
+    </div>
+
+    <canvas id="cardCanvas"></canvas>
+    <div class="hint">
+      iPhone note: download may open in a new tab — long-press → Save Image.
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("cardCanvas");
+    const ctx = canvas.getContext("2d");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const backBtn = document.getElementById("backBtn");
+
+    const params = new URLSearchParams(window.location.search);
+    const mode = (params.get("mode") || "en").toLowerCase(); // en | ar | bi
+    const nameEn = decodeURIComponent(params.get("en") || "").trim();
+    const nameAr = decodeURIComponent(params.get("ar") || "").trim();
+
+    backBtn.addEventListener("click", () => window.location.href = "index.html");
+
+    // 📱 Phone = portrait/long, 💻 Desktop = landscape/wide
+    const isPhone = window.matchMedia("(max-width: 767px)").matches;
+
+    function setCanvasSize() {
+      if (isPhone) { canvas.width = 1080; canvas.height = 1920; }  // portrait
+      else { canvas.width = 1920; canvas.height = 1080; }         // landscape
+    }
+
+    const bg = new Image();
+    bg.src = isPhone ? "demo-card-portrait.png" : "demo-card-landscape.png";
+
+    function pxX(p){ return canvas.width * p; }
+    function pxY(p){ return canvas.height * p; }
+
+    function autoFit(text, baseSize, maxWidthPx, family) {
+      let size = baseSize;
+      while (size > 40) {
+        ctx.font = `700 ${size}px ${family}`;
+        if (ctx.measureText(text).width <= maxWidthPx) break;
+        size -= 2;
+      }
+      return size;
+    }
+
+    function drawOutlined(text, x, y, {
+      family="Arial",
+      size=90,
+      align="left",
+      fill="#FFFFFF",
+      outline="rgba(0,0,0,0.35)",
+      outlineWidth=6
+    } = {}) {
+      ctx.save();
+      ctx.font = `700 ${size}px ${family}`;
+      ctx.textAlign = align;
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = outlineWidth;
+      ctx.strokeStyle = outline;
+      ctx.fillStyle = fill;
+      ctx.strokeText(text, x, y);
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function render() {
+      setCanvasSize();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+      // ✅ NAME PLACEMENT RULES (match your reference behavior)
+      // Desktop landscape: name area on LEFT side under text
+      // Phone portrait: name centered in the middle-lower area
+      const enText = nameEn || "Your Name";
+      const arText = nameAr || "اسمك";
+
+      if (!isPhone) {
+        // LANDSCAPE (desktop/laptop)
+        const EN_X = pxX(0.08);
+        const EN_Y = pxY(0.55);
+
+        const AR_X = pxX(0.46);   // adjust if needed
+        const AR_Y = pxY(0.45);
+
+        if (mode === "en") {
+          const size = autoFit(enText, 88, canvas.width * 0.50, "Arial");
+          drawOutlined(enText, EN_X, EN_Y, { size, align:"left", family:"Arial", outlineWidth:5 });
+        } else if (mode === "ar") {
+          const size = autoFit(enText, 88, canvas.width * 0.50, "Tahoma");
+          drawOutlined(enText, pxX(0.50), pxY(0.46), { size, align:"right", family:"Tahoma", outlineWidth:5 });
+        } else {
+          const enSize = autoFit(enText, 72, canvas.width * 0.50, "Arial");
+          const arSize = autoFit(arText, 72, canvas.width * 0.50, "Tahoma");
+
+          drawOutlined(arText, pxX(0.50), pxY(0.46), { size: arSize, align:"right", family:"Tahoma", outlineWidth:5 });
+          drawOutlined(enText, EN_X, EN_Y, { size: enSize, align:"left", family:"Arial", outlineWidth:5 });
+        }
+      } else {
+        // PORTRAIT (phone)
+        const EN_X = pxX(0.50);
+        const EN_Y = pxY(0.67);
+
+        if (mode === "en") {
+          const size = autoFit(enText, 92, canvas.width * 0.80, "Arial");
+          drawOutlined(enText, EN_X, EN_Y, { size, align:"center", family:"Arial", outlineWidth:5 });
+        } else if (mode === "ar") {
+          const size = autoFit(enText, 92, canvas.width * 0.80, "Tahoma");
+          drawOutlined(enText, EN_X, EN_Y, { size, align:"center", family:"Tahoma", outlineWidth:5 });
+        } else {
+          const arSize = autoFit(arText, 78, canvas.width * 0.80, "Tahoma");
+          const enSize = autoFit(enText, 70, canvas.width * 0.80, "Arial");
+
+          drawOutlined(arText, EN_X, pxY(0.63), { size: arSize, align:"center", family:"Tahoma", outlineWidth:5 });
+          drawOutlined(enText, EN_X, pxY(0.71), { size: enSize, align:"center", family:"Arial", outlineWidth:5 });
+        }
+      }
+
+      downloadBtn.disabled = false;
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      const safe = (nameEn || "greeting").replace(/[^\w\u0600-\u06FF]+/g, "_");
+      const link = document.createElement("a");
+      link.download = `greeting_${mode}_${safe}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+
+    bg.onload = render;
+  </script>
+</body>
+</html>
