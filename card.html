@@ -2,33 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Generated Card</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Generated Greeting Card</title>
+
   <style>
     html, body {
       height: 100%;
       margin: 0;
       background: #000;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Tahoma, sans-serif;
     }
 
-    /* Full-bleed experience */
     .stage {
       height: 100%;
       display: grid;
       place-items: center;
     }
 
-    /* Constrain on desktop, full width on phone */
     .wrap {
       width: min(100vw, 1200px);
     }
 
     @media (max-width: 767px) {
-      .wrap { width: 100vw; }
+      .wrap {
+        width: 100vw;
+      }
     }
 
-    /* Canvas + overlay controls inside the card */
     .canvasWrap {
       position: relative;
       width: 100%;
@@ -38,15 +38,12 @@
       width: 100%;
       display: block;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
       background: #111;
     }
 
     @media (max-width: 767px) {
       canvas {
         border-radius: 0;
-        border-left: none;
-        border-right: none;
       }
     }
 
@@ -57,7 +54,7 @@
       right: 20px;
       display: flex;
       gap: 10px;
-      z-index: 5;
+      z-index: 10;
     }
 
     @media (max-width: 767px) {
@@ -73,7 +70,7 @@
       padding: 10px 14px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.25);
-      background: rgba(255,255,255,0.90);
+      background: rgba(255,255,255,0.9);
       color: #0b2a4a;
       font-weight: 700;
       cursor: pointer;
@@ -90,11 +87,11 @@
   <div class="stage">
     <div class="wrap">
       <div class="canvasWrap">
-        <canvas id="c"></canvas>
+        <canvas id="canvas"></canvas>
 
         <div class="cardActions">
-          <button id="backBtn" type="button">← Back</button>
-          <button id="downloadBtn" type="button" disabled>Download PNG</button>
+          <button id="backBtn">← Back</button>
+          <button id="downloadBtn" disabled>Download PNG</button>
         </div>
       </div>
     </div>
@@ -107,45 +104,44 @@
 
     const isPhone = window.matchMedia("(max-width: 767px)").matches;
 
-    const canvas = document.getElementById("c");
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
     const downloadBtn = document.getElementById("downloadBtn");
     const backBtn = document.getElementById("backBtn");
 
-    // Canvas sizes: 📱 phone portrait (long), 💻 desktop landscape (wide)
+    /* Canvas sizes */
     function setCanvasSize() {
       if (isPhone) {
         canvas.width = 1080;
-        canvas.height = 1920;
+        canvas.height = 1920; // portrait
       } else {
         canvas.width = 1920;
-        canvas.height = 1080;
+        canvas.height = 1080; // landscape
       }
     }
 
-    // 6 images total (3 languages × 2 orientations)
+    /* Background images (6 total) */
     function bgFile() {
       const ori = isPhone ? "portrait" : "landscape";
       if (mode === "en") return `bg-en-${ori}.png`;
       if (mode === "ar") return `bg-ar-${ori}.png`;
-      return `bg-bi-${ori}.png`; // bilingual
+      return `bg-bi-${ori}.png`;
+    }
+
+    /* Name position — MORE LEFT + LOWER */
+    function namePos() {
+      if (isPhone) {
+        // Phone: centered horizontally, lower under greeting
+        return { xPct: 0.50, yPct: 0.75 };
+      } else {
+        // Desktop: clearly under greeting text block (left side)
+        return { xPct: 0.20, yPct: 0.64 };
+      }
     }
 
     function pxX(p) { return canvas.width * p; }
     function pxY(p) { return canvas.height * p; }
-
-    // Name placement: UNDER greeting, centered (all modes)
-    // Tweaked DOWN for better spacing based on your screenshot
-    function namePos() {
-      if (isPhone) {
-        // portrait: under greeting block
-        return { xPct: 0.50, yPct: 0.73 };
-      } else {
-        // landscape: under greeting block on the left area
-        return { xPct: 0.26, yPct: 0.62 };
-      }
-    }
 
     function autoFit(text, baseSize, maxWidthPx, family) {
       let size = baseSize;
@@ -162,20 +158,23 @@
       const x = pxX(xPct);
       const y = pxY(yPct);
 
-      // Arabic-friendly font when AR/BI (still fine for English too)
-      const family = (mode === "ar" || mode === "bi") ? "Tahoma, Arial" : "Arial";
+      const family = (mode === "ar" || mode === "bi")
+        ? "Tahoma, Arial"
+        : "Arial";
 
-      const base = isPhone ? 92 : 84;
-      const maxW = isPhone ? canvas.width * 0.80 : canvas.width * 0.45;
+      const baseSize = isPhone ? 92 : 84;
+      const maxWidth = isPhone
+        ? canvas.width * 0.80
+        : canvas.width * 0.42;
 
-      const size = autoFit(text, base, maxW, family);
+      const fontSize = autoFit(text, baseSize, maxWidth, family);
 
       ctx.save();
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = `700 ${size}px ${family}`;
+      ctx.font = `700 ${fontSize}px ${family}`;
 
-      // Readability (outline + fill)
+      /* Outline + fill for readability */
       ctx.lineWidth = isPhone ? 6 : 5;
       ctx.strokeStyle = "rgba(0,0,0,0.35)";
       ctx.fillStyle = "#FFFFFF";
@@ -191,12 +190,11 @@
     function render() {
       setCanvasSize();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw background
       ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-      // Draw name (once)
-      if (name) drawName(name);
+      if (name) {
+        drawName(name);
+      }
 
       downloadBtn.disabled = false;
     }
@@ -208,9 +206,9 @@
     };
 
     downloadBtn.onclick = () => {
-      const safe = (name || "greeting").replace(/[^\w\u0600-\u06FF]+/g, "_");
+      const safeName = (name || "greeting").replace(/[^\w\u0600-\u06FF]+/g, "_");
       const link = document.createElement("a");
-      link.download = `card_${mode}_${safe}.png`;
+      link.download = `card_${mode}_${safeName}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
