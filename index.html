@@ -106,8 +106,12 @@
       const safeName = (name || "").trim() || "Your Name";
 
       // 🔧 POSITION — adjust if needed
-      const x = canvas.width / 2;
-      const y = 560; // vertical position (smaller = higher)
+      // 🔧 POSITION (lower-left area)
+      const x = 160;   // increase to move right
+      const y = 820;   // increase to move down
+
+      ctx.textAlign = "left";
+
 
       // Auto-fit font size for long names
       let fontSize = 120;
